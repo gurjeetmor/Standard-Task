@@ -146,7 +146,23 @@ namespace Talent.Services.Profile.Controllers
         public ActionResult AddLanguage([FromBody] AddLanguageViewModel language)
         {
             //Your code here;
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            try
+            {
+                string message = "";
+                if (language.Id == "")
+                {
+                    language.Id = ObjectId.GenerateNewId().ToString();
+                    _profileService.AddNewLanguage(language);
+                    message = "Language added successfully";
+                }
+               
+                return Json(new { Success = true, Message = message });
+            }
+            catch
+            {
+                return Json(new { Success = false, Message = "Error while adding language" });
+            }
         }
 
         [HttpPost("updateLanguage")]
@@ -243,7 +259,21 @@ namespace Talent.Services.Profile.Controllers
         public async Task<ActionResult> UpdateProfilePhoto()
         {
             //Your code here;
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            IFormFile file = Request.Form.Files[0];
+           
+            if (file.Length > 0)
+            {
+                if (await _profileService.UpdateTalentPhoto(_userAppContext.CurrentUserId, file))
+                {
+                    return Json(new { Success = true, Message = "File saved successfully" });
+                }
+            }
+           
+                return Json(new { Success = false });
+           
+                        
+           
         }
 
         [HttpPost("updateTalentCV")]

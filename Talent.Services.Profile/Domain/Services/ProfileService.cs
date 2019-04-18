@@ -46,19 +46,201 @@ namespace Talent.Services.Profile.Domain.Services
         public bool AddNewLanguage(AddLanguageViewModel language)
         {
             //Your code here;
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            var newLanguages = new List<AddLanguageViewModel>();
+
+            
+                newLanguages.Add(language);
+            
+           // _userRepository.Add(language);
+            return true;
         }
 
         public async Task<TalentProfileViewModel> GetTalentProfile(string Id)
         {
             //Your code here;
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            User profile = null;
+            profile = (await _userRepository.GetByIdAsync(Id));
+            
+            var videoUrl = "";
+
+            if (profile != null)
+            {
+                videoUrl = string.IsNullOrWhiteSpace(profile.VideoName)
+                          ? ""
+                          : await _fileService.GetFileURL(profile.VideoName, FileType.UserVideo);
+
+                var skills = profile.Skills.Select(x => ViewModelFromSkill(x)).ToList();
+                var languages = profile.Languages.Select(x => ViewModelFromLanguages(x)).ToList();
+                var education = profile.Education.Select(x => ViewModelFromEducation(x)).ToList();
+                var certification = profile.Certifications.Select(x => ViewModelFromCertification(x)).ToList();
+                var experience = profile.Experience.Select(x => ViewModelFromExperience(x)).ToList();
+
+                var result = new TalentProfileViewModel
+                {
+                    Id = profile.Id,
+                    FirstName = profile.FirstName,
+                    MiddleName = profile.MiddleName,
+                    LastName = profile.LastName,
+                    Gender = profile.Gender,
+                    Email = profile.Email,
+                    Phone = profile.Phone,
+                    MobilePhone = profile.MobilePhone,
+                    IsMobilePhoneVerified = profile.IsMobilePhoneVerified,
+                    Address = profile.Address,
+                    Nationality = profile.Nationality,
+                    VisaStatus = profile.VisaStatus,
+                    VisaExpiryDate = profile.VisaExpiryDate,
+                    CvName = profile.CvName,
+                    Summary = profile.Summary,
+                    Description = profile.Description,
+                    LinkedAccounts = profile.LinkedAccounts,
+                    JobSeekingStatus = profile.JobSeekingStatus,  
+                    Skills = skills,
+                    Languages=languages,
+                    Education=education,
+                    Certifications=certification,
+                    Experience=experience,
+                    ProfilePhoto = profile.ProfilePhoto,
+                    ProfilePhotoUrl = profile.ProfilePhotoUrl,
+                    VideoName = profile.VideoName,
+                    VideoUrl = videoUrl,
+                };
+                return result;
+            }
+
+            return null;
         }
 
         public async Task<bool> UpdateTalentProfile(TalentProfileViewModel model, string updaterId)
         {
             //Your code here;
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            try
+            {
+                if (model.Id != null)
+                {
+                    User existingUser = (await _userRepository.GetByIdAsync(model.Id));
+                    existingUser.FirstName = model.FirstName;
+                    existingUser.MiddleName = model.MiddleName;
+                    existingUser.LastName = model.LastName;
+                    existingUser.Gender = model.Gender;
+                    existingUser.Email = model.Email;
+                    existingUser.Phone = model.Phone;
+                    existingUser.MobilePhone = model.MobilePhone;
+                    existingUser.IsMobilePhoneVerified = model.IsMobilePhoneVerified;
+                    existingUser.Address = model.Address;
+                    existingUser.Nationality = model.Nationality;
+                    existingUser.VisaStatus = model.VisaStatus;
+                    existingUser.VisaExpiryDate = model.VisaExpiryDate;
+                    existingUser.CvName = model.CvName;
+                    existingUser.Summary = model.Summary;
+                    existingUser.Description = model.Description;
+                    existingUser.LinkedAccounts = model.LinkedAccounts;
+                    existingUser.JobSeekingStatus = model.JobSeekingStatus;
+                    existingUser.ProfilePhoto = model.ProfilePhoto;
+                    existingUser.ProfilePhotoUrl = model.ProfilePhotoUrl;
+                    //existingUser.DisplayProfile = model.DisplayProfile;
+                    existingUser.UpdatedBy = updaterId;
+                    existingUser.UpdatedOn = DateTime.Now;
+
+                    var newSkills = new List<UserSkill>();
+                    foreach (var item in model.Skills)
+                    {
+                        var skill = existingUser.Skills.SingleOrDefault(x => x.Id == item.Id);
+                        if (skill == null)
+                        {
+                            skill = new UserSkill
+                            {
+                                Id = ObjectId.GenerateNewId().ToString(),
+                                IsDeleted = false
+                            };
+                        }
+                        UpdateSkillFromView(item, skill);
+                        newSkills.Add(skill);
+                    }
+                    existingUser.Skills = newSkills;
+
+                    var newLanguages = new List<UserLanguage>();
+                    foreach (var item in model.Languages)
+                    {
+                        var languages = existingUser.Languages.SingleOrDefault(x => x.Id == item.Id);
+                        if (languages == null)
+                        {
+                            languages = new UserLanguage
+                            {
+                                Id = ObjectId.GenerateNewId().ToString(),
+                                IsDeleted = false
+                            };
+
+                        }
+                        UpdateLanguageFromView(item, languages);
+                        newLanguages.Add(languages);
+                    }
+                    existingUser.Languages = newLanguages;
+
+                    var newEducation = new List<UserEducation>();
+                    foreach (var item in model.Education)
+                    {
+                        var education = existingUser.Education.SingleOrDefault(x => x.Id == item.Id);
+                        if (education == null)
+                        {
+                            education = new UserEducation
+                            {
+                                Id = ObjectId.GenerateNewId().ToString(),
+                                IsDeleted = false
+                            };
+                        }
+                        UpdateEducationFromView(item, education);
+                        newEducation.Add(education);
+                    }
+                    existingUser.Education = newEducation;
+
+                    var newCertification = new List<UserCertification>();
+                    foreach (var item in model.Certifications)
+                    {
+                        var certifications = existingUser.Certifications.SingleOrDefault(x => x.Id == item.Id);
+                        if (certifications == null)
+                        {
+                            certifications = new UserCertification
+                            {
+                                Id = ObjectId.GenerateNewId().ToString(),
+                                IsDeleted = false
+                            };
+                        }
+                        UpdateCertificationFromView(item, certifications);
+                        newCertification.Add(certifications);
+                    }
+                    existingUser.Certifications = newCertification;
+
+                    var newExperience = new List<UserExperience>();
+                    foreach (var item in model.Experience)
+                    {
+                        var experience = existingUser.Experience.SingleOrDefault(x => x.Id == item.Id);
+                        if (experience == null)
+                        {
+                            experience = new UserExperience
+                            {
+                                Id = ObjectId.GenerateNewId().ToString(),
+                                //IsDeleted = false
+                            };
+                        }
+                        UpdateExperienceFromView(item, experience);
+                        newExperience.Add(experience);
+                    }
+                    existingUser.Experience = newExperience;
+
+                    await _userRepository.Update(existingUser);
+
+                    return true;
+                }
+                return false;
+            }
+            catch (MongoException e)
+            {
+                return false;
+            }
         }
 
         public async Task<EmployerProfileViewModel> GetEmployerProfile(string Id, string role)
@@ -229,7 +411,41 @@ namespace Talent.Services.Profile.Domain.Services
         public async Task<bool> UpdateTalentPhoto(string talentId, IFormFile file)
         {
             //Your code here;
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            var fileExtension = Path.GetExtension(file.FileName);
+            List<string> acceptedExtensions = new List<string> { ".jpg", ".png", ".gif", ".jpeg" };
+
+            if (fileExtension != null && !acceptedExtensions.Contains(fileExtension.ToLower()))
+            {
+                return false;
+            }
+
+            var profile = (await _userRepository.Get(x => x.Id == talentId)).SingleOrDefault();
+
+            if (profile == null)
+            {
+                return false;
+            }
+
+            var newFileName = await _fileService.SaveFile(file, FileType.ProfilePhoto);
+
+            if (!string.IsNullOrWhiteSpace(newFileName))
+            {
+                var oldFileName = profile.ProfilePhoto;
+
+                if (!string.IsNullOrWhiteSpace(oldFileName))
+                {
+                    await _fileService.DeleteFile(oldFileName, FileType.ProfilePhoto);
+                }
+
+                profile.ProfilePhoto = newFileName;
+                profile.ProfilePhotoUrl = await _fileService.GetFileURL(newFileName, FileType.ProfilePhoto);
+
+                await _userRepository.Update(profile);
+                return true;
+            }
+
+            return false;
         }
 
         public async Task<bool> AddTalentVideo(string talentId, IFormFile file)
@@ -334,6 +550,81 @@ namespace Talent.Services.Profile.Domain.Services
         }
 
         #endregion
+        protected void UpdateLanguageFromView(AddLanguageViewModel model, UserLanguage original)
+        {
+            original.LanguageLevel = model.Level;
+            original.Language = model.Name;
+            original.UserId = model.CurrentUserId;
+        }
+        protected AddLanguageViewModel ViewModelFromLanguages(UserLanguage language)
+        {
+            return new AddLanguageViewModel
+            {
+                Id = language.Id,               
+                Name = language.Language,
+                Level = language.LanguageLevel,
+                CurrentUserId = language.UserId
+            };
+        }
+
+        protected void UpdateEducationFromView(AddEducationViewModel model, UserEducation original)
+        {
+            original.Country = model.Country;
+            original.InstituteName = model.InstituteName;
+            original.Title = model.Title;
+            original.Degree = model.Degree;
+            original.YearOfGraduation = model.YearOfGraduation;
+        }
+        protected AddEducationViewModel ViewModelFromEducation(UserEducation education)
+        {
+            return new AddEducationViewModel
+            {
+                Id = education.Id,
+                Country = education.Country,
+                InstituteName = education.InstituteName,
+                Title = education.Title,
+                Degree = education.Degree,
+                YearOfGraduation = education.YearOfGraduation
+            };
+        }
+
+        protected void UpdateCertificationFromView(AddCertificationViewModel model, UserCertification original)
+        {
+            original.CertificationName = model.CertificationName;
+            original.CertificationFrom = model.CertificationFrom;
+            original.CertificationYear = model.CertificationYear;
+        }
+        protected AddCertificationViewModel ViewModelFromCertification(UserCertification certification)
+        {
+            return new AddCertificationViewModel
+            {
+                Id = certification.Id,
+                CertificationName = certification.CertificationName,
+                CertificationFrom = certification.CertificationFrom,
+                CertificationYear = certification.CertificationYear
+            };
+        }
+
+        protected void UpdateExperienceFromView(ExperienceViewModel model, UserExperience original)
+        {
+            original.Company = model.Company;
+            original.Position = model.Position;
+            original.Responsibilities = model.Responsibilities;
+            original.Start = model.Start;
+            original.End = model.End;
+        }
+        protected ExperienceViewModel ViewModelFromExperience(UserExperience experience)
+        {
+            return new ExperienceViewModel
+            {
+                Id = experience.Id,
+                Company = experience.Company,
+                Position = experience.Position,
+                Responsibilities = experience.Responsibilities,
+                Start = experience.Start,
+                End = experience.End,
+            };
+        }
 
         #endregion
 
